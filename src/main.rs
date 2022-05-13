@@ -1,7 +1,9 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
+use image::GenericImageView;
 use log::error;
+use pixels::wgpu::Color;
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
@@ -9,11 +11,17 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
-const WIDTH: u32 = 1280;
-const HEIGHT: u32 = 450;
+use crate::drawing::line;
+use crate::drawing::{rect_filled, Point};
+
+mod drawing;
+
+const WIDTH: i32 = 1280;
+const HEIGHT: i32 = 450;
 
 /// Representation of the application state. In this example, a box will bounce around the screen.
 struct World {
+    grid: [[u8; 10]; 10],
 }
 
 fn main() -> Result<(), Error> {
@@ -33,9 +41,13 @@ fn main() -> Result<(), Error> {
     let mut pixels = {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
-        Pixels::new(WIDTH, HEIGHT, surface_texture)?
+        Pixels::new(WIDTH as u32, HEIGHT as u32, surface_texture)?
     };
-    let mut world = World {};
+    // pixels.set_clear_color(Color{r: 0.0, g: 1.0, b: 1.0, a: 1.0});
+    pixels.set_clear_color(Color::BLACK);
+
+    let mut world = World::new();
+    world.init();
 
     event_loop.run(move |event, _, control_flow| {
         // Draw the current frame
@@ -72,22 +84,76 @@ fn main() -> Result<(), Error> {
 }
 
 impl World {
-    /// Update the `World` internal state; bounce the box around the screen.
-    fn update(&mut self) {
+    fn new() -> World {
+        World {
+            grid: [[0; 10]; 10],
+        }
     }
+
+    fn init(&mut self) {
+        let grid_image = image::open("assets/grid.png").unwrap();
+        grid_image.pixels().for_each(|pixel| {
+            let x = pixel.0 as usize;
+            let y = pixel.1 as usize;
+            self.grid[y][x] = pixel.2 .0[0];
+        });
+    }
+    /// Update the `World` internal state; bounce the box around the screen.
+    fn update(&mut self) {}
 
     /// Draw the `World` state to the frame buffer.
     ///
     /// Assumes the default texture format: `wgpu::TextureFormat::Rgba8UnormSrgb`
     fn draw(&self, frame: &mut [u8]) {
-        for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
-            let _x = (i % WIDTH as usize) as i16;
-            let _y = (i / WIDTH as usize) as i16;
+        self.draw_grid(frame);
+        // for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
+        //     let _x = (i % WIDTH as usize) as i16;
+        //     let _y = (i / WIDTH as usize) as i16;
+        //
+        //     let rgba = [0x48, 0xb2, 0xe8, 0xff];
+        //
+        //     pixel.copy_from_slice(&rgba);
+        // }
+    }
 
-            let rgba = [0x48, 0xb2, 0xe8, 0xff];
+    fn draw_grid(&self, frame: &mut [u8]) {
+        let cell = HEIGHT / self.grid.len() as i32;
 
-            pixel.copy_from_slice(&rgba);
+        for (y_index, y) in self.grid.iter().enumerate() {
+            for (x_index, x) in y.iter().enumerate() {
+                if *x > 1 {
+                    rect_filled(
+                        frame,
+                        &Point {
+                            x: x_index as i32 * cell,
+                            y: y_index as i32 * cell,
+                        },
+                        &Point {
+                            x: x_index as i32 * cell + cell,
+                            y: y_index as i32 * cell + cell,
+                        },
+                        [0, 255, 0, 255],
+                    )
+                }
+            }
+        }
+
+        let grid_colour = [0, 200, 0, 255];
+        for i in (0..HEIGHT).step_by(cell as usize) {
+            line(
+                frame,
+                &Point { x: 0, y: i },
+                &Point { x: HEIGHT, y: i },
+                grid_colour,
+            );
+        }
+        for i in (0..HEIGHT).step_by(cell as usize) {
+            line(
+                frame,
+                &Point { x: i, y: 0 },
+                &Point { x: i, y: HEIGHT },
+                grid_colour,
+            );
         }
     }
 }
-
