@@ -5,6 +5,7 @@ use image::GenericImageView;
 use log::error;
 use pixels::wgpu::Color;
 use pixels::{Error, Pixels, SurfaceTexture};
+use std::f32::consts::PI;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -28,6 +29,7 @@ struct World {
 struct Player {
     x: i32,
     y: i32,
+    angle: f32,
 }
 
 fn main() -> Result<(), Error> {
@@ -97,7 +99,11 @@ impl World {
     fn new() -> World {
         World {
             grid: [[0; 10]; 10],
-            player: Player { x: 0, y: 0 },
+            player: Player {
+                x: 0,
+                y: 0,
+                angle: 0.0,
+            },
         }
     }
 
@@ -112,18 +118,24 @@ impl World {
         self.player.y = HEIGHT / 2;
     }
     /// Update the `World` internal state; bounce the box around the screen.
-    fn update(&mut self, x: &WinitInputHelper) {
-        if x.key_held(VirtualKeyCode::W) {
-            self.player.y -= 5;
+    fn update(&mut self, input: &WinitInputHelper) {
+        if input.key_held(VirtualKeyCode::W) {
+            self.player.x += (self.player.angle.cos() * 5.0) as i32;
+            self.player.y += (self.player.angle.sin() * -5.0) as i32;
         }
-        if x.key_held(VirtualKeyCode::S) {
-            self.player.y += 5;
+        if input.key_held(VirtualKeyCode::S) {
+            self.player.x -= (self.player.angle.cos() * 5.0) as i32;
+            self.player.y -= (self.player.angle.sin() * -5.0) as i32;
         }
-        if x.key_held(VirtualKeyCode::A) {
-            self.player.x -= 5;
+        if input.key_held(VirtualKeyCode::A) {
+            self.player.angle += 0.1;
+            self.player.angle = self.player.angle % (2.0 * PI);
+            println!("angle: {}", self.player.angle);
         }
-        if x.key_held(VirtualKeyCode::D) {
-            self.player.x += 5;
+        if input.key_held(VirtualKeyCode::D) {
+            self.player.angle -= 0.1;
+            self.player.angle = (self.player.angle % (2.0 * PI) + (2.0 * PI)) % (2.0 * PI);
+            println!("angle: {}", self.player.angle);
         }
     }
 
@@ -199,10 +211,18 @@ impl World {
             },
             player_colour,
         );
-    }
 
-    fn move_player(&mut self, direction: &Point) {
-        self.player.x += direction.x;
-        self.player.y += direction.y;
+        line(
+            frame,
+            &Point {
+                x: self.player.x,
+                y: self.player.y,
+            },
+            &Point {
+                x: self.player.x + (self.player.angle.cos() * 25.0) as i32,
+                y: self.player.y + (self.player.angle.sin() * -25.0) as i32,
+            },
+            player_colour,
+        );
     }
 }
