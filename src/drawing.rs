@@ -28,3 +28,9 @@ pub fn rect_filled(screen: &mut [u8], lower: &Point, upper: &Point, colour: [u8;
         }
     }
 }
+
+pub fn clear(screen: &mut [u8]) {
+    for (i, byte) in screen.iter_mut().enumerate() {
+        *byte = if i % 4 == 3 { 255 } else { 0 };
+    }
+}

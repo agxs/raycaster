@@ -11,7 +11,7 @@ use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 use winit_input_helper::WinitInputHelper;
 
-use crate::drawing::line;
+use crate::drawing::{clear, line};
 use crate::drawing::{rect_filled, Point};
 
 mod drawing;
@@ -22,6 +22,12 @@ const HEIGHT: i32 = 450;
 /// Representation of the application state. In this example, a box will bounce around the screen.
 struct World {
     grid: [[u8; 10]; 10],
+    player: Player,
+}
+
+struct Player {
+    x: i32,
+    y: i32,
 }
 
 fn main() -> Result<(), Error> {
@@ -43,8 +49,12 @@ fn main() -> Result<(), Error> {
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(WIDTH as u32, HEIGHT as u32, surface_texture)?
     };
-    // pixels.set_clear_color(Color{r: 0.0, g: 1.0, b: 1.0, a: 1.0});
-    pixels.set_clear_color(Color::BLACK);
+    pixels.set_clear_color(Color {
+        r: 0.0,
+        g: 1.0,
+        b: 1.0,
+        a: 1.0,
+    });
 
     let mut world = World::new();
     world.init();
@@ -77,7 +87,7 @@ fn main() -> Result<(), Error> {
             }
 
             // Update internal state and request a redraw
-            world.update();
+            world.update(&input);
             window.request_redraw();
         }
     });
@@ -87,6 +97,7 @@ impl World {
     fn new() -> World {
         World {
             grid: [[0; 10]; 10],
+            player: Player { x: 0, y: 0 },
         }
     }
 
@@ -97,15 +108,32 @@ impl World {
             let y = pixel.1 as usize;
             self.grid[y][x] = pixel.2 .0[0];
         });
+        self.player.x = HEIGHT / 2;
+        self.player.y = HEIGHT / 2;
     }
     /// Update the `World` internal state; bounce the box around the screen.
-    fn update(&mut self) {}
+    fn update(&mut self, x: &WinitInputHelper) {
+        if x.key_held(VirtualKeyCode::W) {
+            self.player.y -= 5;
+        }
+        if x.key_held(VirtualKeyCode::S) {
+            self.player.y += 5;
+        }
+        if x.key_held(VirtualKeyCode::A) {
+            self.player.x -= 5;
+        }
+        if x.key_held(VirtualKeyCode::D) {
+            self.player.x += 5;
+        }
+    }
 
     /// Draw the `World` state to the frame buffer.
     ///
     /// Assumes the default texture format: `wgpu::TextureFormat::Rgba8UnormSrgb`
     fn draw(&self, frame: &mut [u8]) {
+        clear(frame);
         self.draw_grid(frame);
+        self.draw_player(frame);
         // for (i, pixel) in frame.chunks_exact_mut(4).enumerate() {
         //     let _x = (i % WIDTH as usize) as i16;
         //     let _y = (i / WIDTH as usize) as i16;
@@ -155,5 +183,26 @@ impl World {
                 grid_colour,
             );
         }
+    }
+
+    fn draw_player(&self, frame: &mut [u8]) {
+        let player_colour = [255, 0, 0, 255];
+        rect_filled(
+            frame,
+            &Point {
+                x: self.player.x - 5,
+                y: self.player.y - 5,
+            },
+            &Point {
+                x: self.player.x + 5,
+                y: self.player.y + 5,
+            },
+            player_colour,
+        );
+    }
+
+    fn move_player(&mut self, direction: &Point) {
+        self.player.x += direction.x;
+        self.player.y += direction.y;
     }
 }
