@@ -6,6 +6,7 @@ use log::error;
 use pixels::wgpu::Color;
 use pixels::{Error, Pixels, SurfaceTexture};
 use std::f32::consts::PI;
+use std::time::Instant;
 use winit::dpi::LogicalSize;
 use winit::event::{Event, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -27,8 +28,8 @@ struct World {
 }
 
 struct Player {
-    x: i32,
-    y: i32,
+    x: f32,
+    y: f32,
     angle: f32,
 }
 
@@ -61,20 +62,10 @@ fn main() -> Result<(), Error> {
     let mut world = World::new();
     world.init();
 
-    event_loop.run(move |event, _, control_flow| {
-        // Draw the current frame
-        if let Event::RedrawRequested(_) = event {
-            world.draw(pixels.get_frame());
-            if pixels
-                .render()
-                .map_err(|e| error!("pixels.render() failed: {}", e))
-                .is_err()
-            {
-                *control_flow = ControlFlow::Exit;
-                return;
-            }
-        }
+    let mut current_frame_time = Instant::now();
+    let mut previous_frame_time = Instant::now();
 
+    event_loop.run(move |event, _, control_flow| {
         // Handle input events
         if input.update(&event) {
             // Close events
@@ -89,8 +80,24 @@ fn main() -> Result<(), Error> {
             }
 
             // Update internal state and request a redraw
-            world.update(&input);
+            previous_frame_time = current_frame_time;
+            current_frame_time = Instant::now();
+            let delta = (current_frame_time - previous_frame_time).as_micros() as f32 / 1000000.0;
+            world.update(&input, delta);
             window.request_redraw();
+        }
+
+        // Draw the current frame
+        if let Event::RedrawRequested(_) = event {
+            world.draw(pixels.get_frame());
+            if pixels
+                .render()
+                .map_err(|e| error!("pixels.render() failed: {}", e))
+                .is_err()
+            {
+                *control_flow = ControlFlow::Exit;
+                return;
+            }
         }
     });
 }
@@ -100,8 +107,8 @@ impl World {
         World {
             grid: [[0; 10]; 10],
             player: Player {
-                x: 0,
-                y: 0,
+                x: 0.0,
+                y: 0.0,
                 angle: 0.0,
             },
         }
@@ -114,28 +121,26 @@ impl World {
             let y = pixel.1 as usize;
             self.grid[y][x] = pixel.2 .0[0];
         });
-        self.player.x = HEIGHT / 2;
-        self.player.y = HEIGHT / 2;
+        self.player.x = HEIGHT as f32 / 2.0;
+        self.player.y = HEIGHT as f32 / 2.0;
     }
     /// Update the `World` internal state; bounce the box around the screen.
-    fn update(&mut self, input: &WinitInputHelper) {
+    fn update(&mut self, input: &WinitInputHelper, delta: f32) {
         if input.key_held(VirtualKeyCode::W) {
-            self.player.x += (self.player.angle.cos() * 5.0) as i32;
-            self.player.y += (self.player.angle.sin() * -5.0) as i32;
+            self.player.x += self.player.angle.cos() * 200.0 * delta;
+            self.player.y += self.player.angle.sin() * -200.0 * delta;
         }
         if input.key_held(VirtualKeyCode::S) {
-            self.player.x -= (self.player.angle.cos() * 5.0) as i32;
-            self.player.y -= (self.player.angle.sin() * -5.0) as i32;
+            self.player.x -= self.player.angle.cos() * 200.0 * delta;
+            self.player.y -= self.player.angle.sin() * -200.0 * delta;
         }
         if input.key_held(VirtualKeyCode::A) {
-            self.player.angle += 0.1;
+            self.player.angle += 1.5 * delta;
             self.player.angle = self.player.angle % (2.0 * PI);
-            println!("angle: {}", self.player.angle);
         }
         if input.key_held(VirtualKeyCode::D) {
-            self.player.angle -= 0.1;
+            self.player.angle -= 1.5 * delta;
             self.player.angle = (self.player.angle % (2.0 * PI) + (2.0 * PI)) % (2.0 * PI);
-            println!("angle: {}", self.player.angle);
         }
     }
 
@@ -202,12 +207,12 @@ impl World {
         rect_filled(
             frame,
             &Point {
-                x: self.player.x - 5,
-                y: self.player.y - 5,
+                x: self.player.x as i32 - 5,
+                y: self.player.y as i32 - 5,
             },
             &Point {
-                x: self.player.x + 5,
-                y: self.player.y + 5,
+                x: self.player.x as i32 + 5,
+                y: self.player.y as i32 + 5,
             },
             player_colour,
         );
@@ -215,12 +220,12 @@ impl World {
         line(
             frame,
             &Point {
-                x: self.player.x,
-                y: self.player.y,
+                x: self.player.x as i32,
+                y: self.player.y as i32,
             },
             &Point {
-                x: self.player.x + (self.player.angle.cos() * 25.0) as i32,
-                y: self.player.y + (self.player.angle.sin() * -25.0) as i32,
+                x: (self.player.x + self.player.angle.cos() * 25.0) as i32,
+                y: (self.player.y + self.player.angle.sin() * -25.0) as i32,
             },
             player_colour,
         );
