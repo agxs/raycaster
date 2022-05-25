@@ -29,9 +29,9 @@ impl World {
         self.player.y = HEIGHT as f32 / 2.0;
         self.grid.init();
     }
-    /// Update the `World` internal state; bounce the box around the screen.
+    /// Update everything in the world
     pub fn update(&mut self, input: &WinitInputHelper, delta: f32) {
-        self.player.update(input, delta);
+        self.player.update(input, &self.grid, delta);
     }
 
     /// Draw the `World` state to the frame buffer.
