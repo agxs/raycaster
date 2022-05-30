@@ -1,7 +1,7 @@
 use crate::grid::Grid;
 use crate::renderer::cast_ray;
 use crate::{line, rect_filled, Point};
-use std::f32::consts::{FRAC_PI_2, PI};
+use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
 use vecmath::{vec2_len, Vector2};
 use winit::event::VirtualKeyCode;
 use winit_input_helper::WinitInputHelper;
@@ -90,23 +90,39 @@ impl Player {
                 x: (screen_x as f32 + self.angle.cos() * 25.0) as i32,
                 y: (screen_y as f32 + self.angle.sin() * -25.0) as i32,
             },
-            player_colour,
+            [255, 255, 0, 255],
         );
 
+        let angle_delta = FRAC_PI_2 / 90.0;
+        let mut start_angle = self.angle - (FRAC_PI_4);
+        // let mut start_angle = self.angle;
+        for angle in 0..90 {
+            let direction = [start_angle.cos(), start_angle.sin()];
+            self.cast_ray(screen_x, screen_y, grid, frame, direction);
+            start_angle += angle_delta;
+        }
+    }
+
+    fn cast_ray(
+        &self,
+        screen_x: i32,
+        screen_y: i32,
+        grid: &Grid,
+        frame: &mut [u8],
+        direction: Vector2<f32>,
+    ) {
         let origin: Vector2<f32> = [self.x, self.y];
-        let direction: Vector2<f32> = self.normalised_direction();
         let hit = cast_ray(origin, direction, grid);
         let cast_point = match hit {
             None => Point {
-                x: (screen_x as f32 + self.angle.cos() * 2.5 * grid.tile_size as f32) as i32,
-                y: (screen_y as f32 + self.angle.sin() * -2.5 * grid.tile_size as f32) as i32,
+                x: (screen_x as f32 + direction[0] * 2.5 * grid.tile_size as f32) as i32,
+                y: (screen_y as f32 + direction[1] * -2.5 * grid.tile_size as f32) as i32,
             },
             Some(h) => {
                 let length = vec2_len(h);
                 Point {
-                    x: (screen_x as f32 + self.angle.cos() * length * grid.tile_size as f32) as i32,
-                    y: (screen_y as f32 + self.angle.sin() * -length * grid.tile_size as f32)
-                        as i32,
+                    x: (screen_x as f32 + direction[0] * length * grid.tile_size as f32) as i32,
+                    y: (screen_y as f32 + direction[1] * -length * grid.tile_size as f32) as i32,
                 }
             }
         };
@@ -118,7 +134,7 @@ impl Player {
                 y: screen_y,
             },
             &cast_point,
-            player_colour,
+            [255, 0, 0, 255],
         );
 
         rect_filled(
