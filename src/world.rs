@@ -26,9 +26,9 @@ impl World {
     }
 
     pub fn init(&mut self) {
-        self.player.x = HEIGHT as f32 / 2.0;
-        self.player.y = HEIGHT as f32 / 2.0;
         self.grid.init();
+        self.player.x = self.grid.width as f32 / 2.0;
+        self.player.y = self.grid.height as f32 / 2.0;
     }
     /// Update everything in the world
     pub fn update(&mut self, input: &WinitInputHelper, delta: f32) {
@@ -41,6 +41,6 @@ impl World {
     pub fn draw(&self, frame: &mut [u8]) {
         clear(frame);
         self.grid.draw(frame);
-        self.player.draw(frame);
+        self.player.draw(frame, &self.grid);
     }
 }
