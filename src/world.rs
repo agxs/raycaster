@@ -15,6 +15,7 @@ impl World {
                 tiles: Vec::new(),
                 width: 0,
                 height: 0,
+                tile_size: 0,
             },
             player: Player {
                 x: 0.0,

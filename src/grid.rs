@@ -5,6 +5,7 @@ pub struct Grid {
     pub tiles: Vec<u8>,
     pub width: u32,
     pub height: u32,
+    pub tile_size: i32,
 }
 
 impl Grid {
@@ -14,6 +15,7 @@ impl Grid {
         self.height = grid_image.height();
         self.tiles
             .resize((grid_image.width() * grid_image.height()) as usize, 0);
+        self.tile_size = HEIGHT / self.height as i32;
 
         grid_image.pixels().for_each(|pixel| {
             let x = pixel.0 as usize;
@@ -24,8 +26,6 @@ impl Grid {
     }
 
     pub fn draw(&self, frame: &mut [u8]) {
-        let cell = HEIGHT / self.height as i32;
-
         for (i, grid_value) in self.tiles.iter().enumerate() {
             let x_index = i % self.width as usize;
             let y_index = i / self.width as usize;
@@ -33,12 +33,12 @@ impl Grid {
                 rect_filled(
                     frame,
                     &Point {
-                        x: x_index as i32 * cell,
-                        y: y_index as i32 * cell,
+                        x: x_index as i32 * self.tile_size,
+                        y: y_index as i32 * self.tile_size,
                     },
                     &Point {
-                        x: x_index as i32 * cell + cell,
-                        y: y_index as i32 * cell + cell,
+                        x: x_index as i32 * self.tile_size + self.tile_size,
+                        y: y_index as i32 * self.tile_size + self.tile_size,
                     },
                     [0, 255, 0, 255],
                 )
@@ -46,7 +46,7 @@ impl Grid {
         }
 
         let grid_colour = [0, 200, 0, 255];
-        for i in (0..HEIGHT).step_by(cell as usize) {
+        for i in (0..HEIGHT).step_by(self.tile_size as usize) {
             line(
                 frame,
                 &Point { x: 0, y: i },
@@ -54,7 +54,7 @@ impl Grid {
                 grid_colour,
             );
         }
-        for i in (0..HEIGHT).step_by(cell as usize) {
+        for i in (0..HEIGHT).step_by(self.tile_size as usize) {
             line(
                 frame,
                 &Point { x: i, y: 0 },

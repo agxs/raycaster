@@ -12,7 +12,7 @@ pub struct Player {
 
 impl Player {
     pub fn update(&mut self, input: &WinitInputHelper, grid: &Grid, delta: f32) {
-        let cell_size = (HEIGHT / grid.height as i32) as f32;
+        let cell_size = grid.tile_size as f32;
         if input.key_held(VirtualKeyCode::W) {
             let x = (self.x / cell_size) as usize;
             let y = (self.y / cell_size) as usize;
