@@ -1,6 +1,8 @@
 use crate::grid::Grid;
-use crate::{line, rect_filled, Point, HEIGHT};
-use std::f32::consts::PI;
+use crate::renderer::cast_ray;
+use crate::{line, rect_filled, Point};
+use std::f32::consts::{FRAC_PI_2, PI};
+use vecmath::{vec2_len, Vector2};
 use winit::event::VirtualKeyCode;
 use winit_input_helper::WinitInputHelper;
 
@@ -44,13 +46,21 @@ impl Player {
             self.angle -= 1.5 * delta;
             self.angle = (self.angle % (2.0 * PI) + (2.0 * PI)) % (2.0 * PI);
         }
+        if input.key_held(VirtualKeyCode::Key1) {
+            self.angle = 0.0;
+        }
+        if input.key_held(VirtualKeyCode::Key2) {
+            self.angle = FRAC_PI_2;
+        }
+        if input.key_held(VirtualKeyCode::Key3) {
+            self.angle = PI;
+        }
+        if input.key_held(VirtualKeyCode::Key4) {
+            self.angle = FRAC_PI_2 * 3.0;
+        }
 
-        self.x = self
-            .x
-            .clamp(0.0, (grid.tile_size * grid.width as i32) as f32);
-        self.y = self
-            .y
-            .clamp(0.0, (grid.tile_size * grid.width as i32) as f32);
+        self.x = self.x.clamp(0.0, (grid.tile_size * grid.width) as f32);
+        self.y = self.y.clamp(0.0, (grid.tile_size * grid.width) as f32);
     }
 
     pub fn draw(&self, frame: &mut [u8], grid: &Grid) {
@@ -82,5 +92,50 @@ impl Player {
             },
             player_colour,
         );
+
+        let origin: Vector2<f32> = [self.x, self.y];
+        let direction: Vector2<f32> = self.normalised_direction();
+        let hit = cast_ray(origin, direction, grid);
+        let cast_point = match hit {
+            None => Point {
+                x: (screen_x as f32 + self.angle.cos() * 2.5 * grid.tile_size as f32) as i32,
+                y: (screen_y as f32 + self.angle.sin() * -2.5 * grid.tile_size as f32) as i32,
+            },
+            Some(h) => {
+                let length = vec2_len(h);
+                Point {
+                    x: (screen_x as f32 + self.angle.cos() * length * grid.tile_size as f32) as i32,
+                    y: (screen_y as f32 + self.angle.sin() * -length * grid.tile_size as f32)
+                        as i32,
+                }
+            }
+        };
+
+        line(
+            frame,
+            &Point {
+                x: screen_x,
+                y: screen_y,
+            },
+            &cast_point,
+            player_colour,
+        );
+
+        rect_filled(
+            frame,
+            &Point {
+                x: cast_point.x - 5,
+                y: cast_point.y - 5,
+            },
+            &Point {
+                x: cast_point.x + 5,
+                y: cast_point.y + 5,
+            },
+            [0, 0, 255, 255],
+        );
+    }
+
+    pub fn normalised_direction(&self) -> Vector2<f32> {
+        [self.angle.cos(), self.angle.sin()]
     }
 }

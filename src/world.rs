@@ -1,6 +1,6 @@
+use crate::clear;
 use crate::grid::Grid;
 use crate::player::Player;
-use crate::{clear, HEIGHT};
 use winit_input_helper::WinitInputHelper;
 
 pub struct World {

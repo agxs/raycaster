@@ -18,6 +18,7 @@ use crate::world::World;
 mod drawing;
 mod grid;
 mod player;
+mod renderer;
 mod world;
 
 const WIDTH: i32 = 1280;
