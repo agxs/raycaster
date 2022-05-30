@@ -45,6 +45,9 @@ pub fn cast_ray(
             ray_length_1d[1] += ray_unit_step_size[1];
         }
 
+        if distance > max_distance {
+            return None;
+        }
         if current_tile[0] >= 0
             && current_tile[0] < grid.width
             && current_tile[1] >= 0
