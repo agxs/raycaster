@@ -31,7 +31,7 @@ pub fn cast_ray(
         ray_length_1d[1] = (origin[1] - current_tile[1] as f32) * ray_unit_step_size[1];
     }
 
-    let max_distance = 2.5;
+    let max_distance = 10.0;
     let mut distance = 0.0;
     let mut tile_found = false;
     while !tile_found && distance < max_distance {

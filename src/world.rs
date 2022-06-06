@@ -1,11 +1,13 @@
 use crate::clear;
 use crate::grid::Grid;
 use crate::player::Player;
+use crate::viewport::Viewport;
 use winit_input_helper::WinitInputHelper;
 
 pub struct World {
     grid: Grid,
     player: Player,
+    viewport: Viewport,
 }
 
 impl World {
@@ -22,6 +24,7 @@ impl World {
                 y: 0.0,
                 angle: 0.0,
             },
+            viewport: Viewport::new(),
         }
     }
 
@@ -42,5 +45,6 @@ impl World {
         clear(frame);
         self.grid.draw(frame);
         self.player.draw(frame, &self.grid);
+        self.viewport.draw(frame, &self.player, &self.grid);
     }
 }

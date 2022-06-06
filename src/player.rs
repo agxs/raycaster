@@ -1,6 +1,6 @@
 use crate::grid::Grid;
 use crate::renderer::cast_ray;
-use crate::{line, rect_filled, Point};
+use crate::{line, rect_filled, Point, HEIGHT, WIDTH};
 use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
 use vecmath::{vec2_len, Vector2};
 use winit::event::VirtualKeyCode;
@@ -93,13 +93,17 @@ impl Player {
             [255, 255, 0, 255],
         );
 
-        let angle_delta = FRAC_PI_2 / 90.0;
-        let mut start_angle = self.angle - (FRAC_PI_4);
-        // let mut start_angle = self.angle;
-        for angle in 0..90 {
-            let direction = [start_angle.cos(), start_angle.sin()];
+        // Screen width, should be from constant or at least defined in one place...
+        let width = WIDTH - 10 - (HEIGHT + 20);
+        // To avoid distortion we can't send rays out with equal angles, this bunches
+        // them up in the centre. Instead we use divide up the "opposite" side of the
+        // triangle into equal portions and figure out the angles using tan θ = op/adj
+        let increment = (1.0 * (FRAC_PI_4).sin()) / (width as f32 / 2.0);
+        for x in 0..width {
+            let angle = -(increment * (x - width / 2) as f32).atan() + self.angle;
+
+            let direction = [angle.cos(), angle.sin()];
             self.cast_ray(screen_x, screen_y, grid, frame, direction);
-            start_angle += angle_delta;
         }
     }
 
@@ -110,16 +114,17 @@ impl Player {
         grid: &Grid,
         frame: &mut [u8],
         direction: Vector2<f32>,
-    ) {
+    ) -> f32 {
         let origin: Vector2<f32> = [self.x, self.y];
         let hit = cast_ray(origin, direction, grid);
+        let mut length = 0.0;
         let cast_point = match hit {
             None => Point {
-                x: (screen_x as f32 + direction[0] * 2.5 * grid.tile_size as f32) as i32,
-                y: (screen_y as f32 + direction[1] * -2.5 * grid.tile_size as f32) as i32,
+                x: (screen_x as f32 + direction[0] * 10.0 * grid.tile_size as f32) as i32,
+                y: (screen_y as f32 + direction[1] * -10.0 * grid.tile_size as f32) as i32,
             },
             Some(h) => {
-                let length = vec2_len(h);
+                length = vec2_len(h);
                 Point {
                     x: (screen_x as f32 + direction[0] * length * grid.tile_size as f32) as i32,
                     y: (screen_y as f32 + direction[1] * -length * grid.tile_size as f32) as i32,
@@ -149,9 +154,7 @@ impl Player {
             },
             [0, 0, 255, 255],
         );
-    }
 
-    pub fn normalised_direction(&self) -> Vector2<f32> {
-        [self.angle.cos(), self.angle.sin()]
+        return length;
     }
 }

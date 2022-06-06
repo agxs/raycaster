@@ -19,6 +19,7 @@ mod drawing;
 mod grid;
 mod player;
 mod renderer;
+mod viewport;
 mod world;
 
 const WIDTH: i32 = 1280;
