@@ -98,7 +98,8 @@ impl Player {
         // To avoid distortion we can't send rays out with equal angles, this bunches
         // them up in the centre. Instead we use divide up the "opposite" side of the
         // triangle into equal portions and figure out the angles using tan θ = op/adj
-        let increment = (1.0 * (FRAC_PI_4).sin()) / (width as f32 / 2.0);
+        let fov = 2.0 * (0.66 / 1.0 as f32).atan();
+        let increment = (1.0 * (fov).sin()) / (width as f32 / 2.0);
         for x in 0..width {
             let angle = -(increment * (x - width / 2) as f32).atan() + self.angle;
 
@@ -123,11 +124,11 @@ impl Player {
                 x: (screen_x as f32 + direction[0] * 10.0 * grid.tile_size as f32) as i32,
                 y: (screen_y as f32 + direction[1] * -10.0 * grid.tile_size as f32) as i32,
             },
-            Some(h) => {
+            Some((h, _s)) => {
                 length = vec2_len(h);
                 Point {
-                    x: (screen_x as f32 + direction[0] * length * grid.tile_size as f32) as i32,
-                    y: (screen_y as f32 + direction[1] * -length * grid.tile_size as f32) as i32,
+                    x: (screen_x as f32 + h[0] * grid.tile_size as f32) as i32,
+                    y: (screen_y as f32 - h[1] * grid.tile_size as f32) as i32,
                 }
             }
         };

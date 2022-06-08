@@ -32,6 +32,7 @@ impl World {
         self.grid.init();
         self.player.x = self.grid.width as f32 / 2.0;
         self.player.y = self.grid.height as f32 / 2.0;
+        self.viewport.init();
     }
     /// Update everything in the world
     pub fn update(&mut self, input: &WinitInputHelper, delta: f32) {
