@@ -161,7 +161,7 @@ impl Viewport {
                                 x: x + self.x_offset,
                                 y: self.y_offset + height_offset + y,
                             },
-                            self.sample_colour(scale, y as f32 / line_height as f32, distance),
+                            self.sample_colour(scale, y as f32 / line_height as f32, s),
                         );
                     }
                 }
@@ -169,13 +169,18 @@ impl Viewport {
         }
     }
 
-    fn sample_colour(&self, x: f32, y: f32, distance: f32) -> [u8; 4] {
+    fn sample_colour(&self, x: f32, y: f32, side: u8) -> [u8; 4] {
         let grid_x = x * self.tex_width as f32;
         let grid_y = y * self.tex_height as f32;
         let start = grid_x as usize * 4 + grid_y as usize * self.tex_width * 4;
 
         let mut c: [u8; 4] = [0; 4];
         c.copy_from_slice(&self.texture[start..start + 4]);
+        if side == 1 {
+            c[0..3].iter_mut().for_each(|c| {
+                *c = (*c as f32 * 0.6) as u8;
+            });
+        }
         return c;
     }
 }
