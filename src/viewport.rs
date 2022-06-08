@@ -133,7 +133,7 @@ impl Viewport {
                 None => (),
                 Some((h, s)) => {
                     let direction_angle = (player.angle - angle).cos();
-                    let distance = (vec2_len(h) * direction_angle).max(1.0);
+                    let distance = (vec2_len(h) * direction_angle);
                     let line_height = (self.height as f32 / distance) as i32;
 
                     // let colour = if s == 0 {

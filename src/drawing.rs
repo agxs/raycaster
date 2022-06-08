@@ -8,12 +8,10 @@ pub struct Point {
 }
 
 pub fn line(screen: &mut [u8], p1: &Point, p2: &Point, colour: [u8; 4]) {
-    let p1 = (p1.x, p1.y);
-    let p2 = (p2.x, p2.y);
+    let p1 = (p1.x.clamp(0, WIDTH - 1), p1.y.clamp(0, HEIGHT - 1));
+    let p2 = (p2.x.clamp(0, WIDTH - 1), p2.y.clamp(0, HEIGHT - 1));
 
     for (x, y) in Bresenham::new(p1, p2) {
-        let x = min(x, WIDTH - 1);
-        let y = min(y, HEIGHT - 1);
         let i = (x * 4 + y * WIDTH * 4) as usize;
 
         screen[i..i + 4].copy_from_slice(&colour);
