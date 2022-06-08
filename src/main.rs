@@ -18,7 +18,7 @@ use crate::world::World;
 mod drawing;
 mod grid;
 mod player;
-mod renderer;
+mod ray;
 mod viewport;
 mod world;
 
@@ -55,7 +55,6 @@ fn main() -> Result<(), Error> {
     world.init();
 
     let mut current_frame_time = Instant::now();
-    let mut previous_frame_time = Instant::now();
 
     event_loop.run(move |event, _, control_flow| {
         // Handle input events
@@ -72,7 +71,7 @@ fn main() -> Result<(), Error> {
             }
 
             // Update internal state and request a redraw
-            previous_frame_time = current_frame_time;
+            let previous_frame_time = current_frame_time;
             current_frame_time = Instant::now();
             let delta = (current_frame_time - previous_frame_time).as_micros() as f32 / 1000000.0;
             world.update(&input, delta);

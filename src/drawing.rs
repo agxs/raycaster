@@ -6,6 +6,13 @@ pub struct Point {
     pub y: i32,
 }
 
+pub fn pixel(screen: &mut [u8], x: i32, y: i32, colour: [u8; 4]) {
+    let x = x.clamp(0, WIDTH - 1);
+    let y = y.clamp(0, HEIGHT - 1);
+    let i = (x * 4 + y * WIDTH * 4) as usize;
+    screen[i..i + 4].copy_from_slice(&colour);
+}
+
 pub fn line(screen: &mut [u8], p1: &Point, p2: &Point, colour: [u8; 4]) {
     let p1 = (p1.x.clamp(0, WIDTH - 1), p1.y.clamp(0, HEIGHT - 1));
     let p2 = (p2.x.clamp(0, WIDTH - 1), p2.y.clamp(0, HEIGHT - 1));

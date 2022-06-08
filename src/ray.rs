@@ -1,11 +1,17 @@
 use crate::grid::Grid;
 use vecmath::{vec2_scale, Vector2};
 
+#[derive(Copy, Clone)]
+pub enum HitSide {
+    X,
+    Y,
+}
+
 pub fn cast_ray(
     origin: Vector2<f32>,
     direction: Vector2<f32>,
     grid: &Grid,
-) -> Option<(Vector2<f32>, u8)> {
+) -> Option<(Vector2<f32>, HitSide)> {
     let mut ray_unit_step_size: Vector2<f32> = [
         (1.0 + (direction[1] / direction[0]) * (direction[1] / direction[0])).sqrt(),
         (1.0 + (direction[0] / direction[1]) * (direction[0] / direction[1])).sqrt(),
@@ -34,18 +40,18 @@ pub fn cast_ray(
     let max_distance = 10.0;
     let mut distance = 0.0;
     let mut tile_found = false;
-    let mut side = 0 as u8;
+    let mut side = HitSide::X;
     while !tile_found && distance < max_distance {
         if ray_length_1d[0] < ray_length_1d[1] {
             current_tile[0] += step[0];
             distance = ray_length_1d[0];
             ray_length_1d[0] += ray_unit_step_size[0];
-            side = 0;
+            side = HitSide::Y;
         } else {
             current_tile[1] -= step[1];
             distance = ray_length_1d[1];
             ray_length_1d[1] += ray_unit_step_size[1];
-            side = 1;
+            side = HitSide::X;
         }
 
         if distance > max_distance {

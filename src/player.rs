@@ -1,5 +1,5 @@
 use crate::grid::Grid;
-use crate::renderer::cast_ray;
+use crate::ray::cast_ray;
 use crate::{line, rect_filled, Point, HEIGHT, WIDTH};
 use std::f32::consts::{FRAC_PI_2, PI};
 use vecmath::{vec2_len, Vector2};
@@ -104,11 +104,11 @@ impl Player {
             let angle = -(increment * (x - width / 2) as f32).atan() + self.angle;
 
             let direction = [angle.cos(), angle.sin()];
-            self.cast_ray(screen_x, screen_y, grid, frame, direction);
+            self.draw_fov(screen_x, screen_y, grid, frame, direction);
         }
     }
 
-    fn cast_ray(
+    fn draw_fov(
         &self,
         screen_x: i32,
         screen_y: i32,
