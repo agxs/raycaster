@@ -1,7 +1,7 @@
 use crate::grid::Grid;
 use crate::renderer::cast_ray;
 use crate::{line, rect_filled, Point, HEIGHT, WIDTH};
-use std::f32::consts::{FRAC_PI_2, FRAC_PI_4, PI};
+use std::f32::consts::{FRAC_PI_2, PI};
 use vecmath::{vec2_len, Vector2};
 use winit::event::VirtualKeyCode;
 use winit_input_helper::WinitInputHelper;

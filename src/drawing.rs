@@ -1,6 +1,5 @@
 use crate::{HEIGHT, WIDTH};
 use line_drawing::Bresenham;
-use std::cmp::min;
 
 pub struct Point {
     pub x: i32,

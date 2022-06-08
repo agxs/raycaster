@@ -133,7 +133,7 @@ impl Viewport {
                 None => (),
                 Some((h, s)) => {
                     let direction_angle = (player.angle - angle).cos();
-                    let distance = (vec2_len(h) * direction_angle);
+                    let distance = vec2_len(h) * direction_angle;
                     let line_height = (self.height as f32 / distance) as i32;
 
                     // let colour = if s == 0 {
@@ -170,9 +170,6 @@ impl Viewport {
     }
 
     fn sample_colour(&self, x: f32, y: f32, distance: f32) -> [u8; 4] {
-        if x <= 0.05 || x >= 0.95 || y <= 0.05 || y >= 0.95 {
-            return [0, 0, 0, 255];
-        }
         let grid_x = x * self.tex_width as f32;
         let grid_y = y * self.tex_height as f32;
         let start = grid_x as usize * 4 + grid_y as usize * self.tex_width * 4;
